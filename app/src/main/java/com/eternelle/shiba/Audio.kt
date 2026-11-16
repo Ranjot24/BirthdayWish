@@ -8,6 +8,12 @@ import android.media.AudioRecord
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.media.SoundPool
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
+import java.util.Locale
 import androidx.annotation.RawRes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -31,10 +37,9 @@ enum class Sfx(@RawRes val res: Int) {
 }
 
 /**
- * Set to false once Ranjot's real voice recording replaces res/raw/veer_message.ogg.
- * While true, the hug chapter plays a gentle lullaby and says so honestly in the captions.
+ * The hug message is spoken in Punjabi by the phone's own text-to-speech voice (pa-IN).
+ * If that voice isn't installed, a gentle melody plays and the words are shown on screen.
  */
-const val VOICE_IS_PLACEHOLDER = true
 
 /** Owns all sound: SoundPool for effects, MediaPlayer for the music bed and the voice message. */
 class AudioDirector(private val context: Context) {
@@ -60,7 +65,21 @@ class AudioDirector(private val context: Context) {
     private var musicVolume = 0.32f
     private var foreground = true
 
+    private val main = Handler(Looper.getMainLooper())
+    private var tts: TextToSpeech? = null
+    @Volatile var punjabiVoice = false
+        private set
+
     init {
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                @Suppress("DEPRECATION")
+                val r = tts?.setLanguage(Locale("pa", "IN")) ?: TextToSpeech.LANG_NOT_SUPPORTED
+                punjabiVoice = r >= TextToSpeech.LANG_AVAILABLE
+                tts?.setSpeechRate(0.88f)
+                tts?.setPitch(1.0f)
+            }
+        }
         pool.setOnLoadCompleteListener { _, _, _ -> loadedCount++ }
         Sfx.entries.forEach { ids[it] = pool.load(context, it.res, 1) }
     }
@@ -90,6 +109,21 @@ class AudioDirector(private val context: Context) {
     fun playVoice(onDone: () -> Unit) {
         stopVoice()
         setMusicVolume(0.06f) // never overpower the voice
+        val engine = tts
+        if (punjabiVoice && engine != null) {
+            engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) {}
+                override fun onDone(utteranceId: String?) {
+                    main.post { setMusicVolume(0.32f); onDone() }
+                }
+                @Deprecated("Deprecated in Java")
+                override fun onError(utteranceId: String?) {
+                    main.post { setMusicVolume(0.32f); onDone() }
+                }
+            })
+            val ok = engine.speak(Lines.veerPunjabi, TextToSpeech.QUEUE_FLUSH, Bundle(), "veer")
+            if (ok == TextToSpeech.SUCCESS) return
+        }
         voice = MediaPlayer.create(context, R.raw.veer_message)?.apply {
             setOnCompletionListener {
                 setMusicVolume(0.32f)
@@ -101,6 +135,7 @@ class AudioDirector(private val context: Context) {
     }
 
     fun stopVoice() {
+        tts?.stop()
         voice?.run { try { stop() } catch (_: Exception) {}; release() }
         voice = null
         setMusicVolume(0.32f)
@@ -112,10 +147,12 @@ class AudioDirector(private val context: Context) {
         foreground = false
         music?.pause()
         voice?.pause()
+        tts?.stop()
     }
 
     fun release() {
         stopVoice()
+        tts?.shutdown(); tts = null
         music?.release(); music = null
         pool.release()
     }

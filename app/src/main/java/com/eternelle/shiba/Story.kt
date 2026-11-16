@@ -60,6 +60,15 @@ val Blessings = listOf(
 )
 
 object Lines {
+    const val veerPunjabi = "ਜਨਮਦਿਨ ਮੁਬਾਰਕ, ਮੇਰੀ ਪਿਆਰੀ ਸ਼ੀਬਾ! " +
+        "ਅੱਜ ਮੈਂ ਤੇਰੇ ਕੋਲ ਨਹੀਂ ਹਾਂ, ਪਰ ਮੇਰਾ ਦਿਲ ਹਮੇਸ਼ਾ ਤੇਰੇ ਨਾਲ ਹੈ। " +
+        "ਕੋਲਕਾਤਾ ਭਾਵੇਂ ਦੂਰ ਹੈ, ਪਰ ਜਮਸ਼ੇਦਪੁਰ ਵਿੱਚ ਤੇਰਾ ਘਰ ਅਤੇ ਤੇਰਾ ਵੀਰ ਹਮੇਸ਼ਾ ਤੇਰੀ ਉਡੀਕ ਕਰਦੇ ਨੇ। " +
+        "ਰੱਬ ਕਰੇ ਤੇਰਾ ਹਰ ਸੁਪਨਾ ਪੂਰਾ ਹੋਵੇ, ਤੂੰ ਹਮੇਸ਼ਾ ਹੱਸਦੀ ਰਹੇਂ ਤੇ ਖੁਸ਼ ਰਹੇਂ। " +
+        "ਯਾਦ ਰੱਖੀਂ, ਤੇਰਾ ਵੀਰ ਹਮੇਸ਼ਾ ਤੇਰੇ ਨਾਲ ਹੈ। ਬਹੁਤ ਸਾਰਾ ਪਿਆਰ!"
+    const val veerEnglish = "Happy birthday, my dear Shiba! I'm not with you today, but my heart is always with you. " +
+        "Kolkata may be far, but your home and your veer in Jamshedpur are always waiting for you. " +
+        "May every dream of yours come true, may you always keep laughing and stay happy. " +
+        "Remember, your veer is always with you. Lots of love!"
     val lumiIntro = listOf(
         "Finally! You're here!",
         "Hi, I'm Lumi! Your veer sent me with a whole universe, just for you.",

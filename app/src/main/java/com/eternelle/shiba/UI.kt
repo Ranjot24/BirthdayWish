@@ -493,10 +493,23 @@ fun ChapterCard(story: Story, audio: AudioDirector, arMode: Boolean, onUse3D: ()
                 Text("Your veer is always with you.", color = Rose, fontSize = 23.sp, fontFamily = Serif,
                     fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
             } else Body("A golden ribbon is wrapping a hug around your heart.")
-            if (VOICE_IS_PLACEHOLDER) Body("(Voice message coming soon — this is a placeholder melody.)")
+            var showWords by remember { mutableStateOf(!audio.punjabiVoice) }
+            if (showWords) {
+                Spacer(Modifier.height(8.dp))
+                Box(Modifier.fillMaxWidth().heightIn(max = 150.dp).clip(RoundedCornerShape(14.dp))
+                    .background(Pearl.copy(alpha = 0.08f))) {
+                    Column(Modifier.verticalScroll(rememberScrollState()).padding(12.dp)) {
+                        Text(Lines.veerPunjabi, color = Rose, fontSize = 16.sp, lineHeight = 26.sp)
+                        Spacer(Modifier.height(6.dp))
+                        Text(Lines.veerEnglish, color = Pearl.copy(alpha = 0.7f), fontSize = 12.sp, lineHeight = 17.sp)
+                    }
+                }
+                if (!audio.punjabiVoice) Body("(This phone has no Punjabi voice installed, so here are the words.)")
+            }
             Buttons {
                 if (story.voicePlaying) PillButton("■ Pause message", primary = false) { audio.stopVoice(); story.voicePlaying = false }
                 else PillButton("▶ Play message", primary = false) { story.voicePlaying = true; audio.playVoice { story.voicePlaying = false } }
+                PillButton(if (showWords) "Hide words" else "Show words", primary = false) { showWords = !showWords }
                 PillButton("Open my gift ✦", primary = true) { audio.stopVoice(); story.voicePlaying = false; story.next() }
             }
         }
