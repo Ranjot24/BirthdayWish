@@ -75,4 +75,4 @@ object CrashReporter {
     }
 }
 
-object BuildInfo { const val VERSION = "2.3" }
+object BuildInfo { const val VERSION = "2.4" }
