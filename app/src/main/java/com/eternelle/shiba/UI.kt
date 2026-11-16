@@ -11,6 +11,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -273,10 +276,7 @@ fun Overlay(
                 ChapterCard(story, audio, arMode, onUse3D)
             }
         } else {
-            Row(Modifier.align(Alignment.BottomCenter).padding(16.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SaveGreetingButton(story)
-                PillButton("Exit keepsake", primary = false) { story.keepsakeMode = false }
-            }
+            KeepsakePage(story)
         }
         if (settingsOpen) SettingsPanel(story, Modifier.align(Alignment.TopEnd).padding(top = 56.dp, end = 12.dp)) { settingsOpen = false }
     }
@@ -566,21 +566,95 @@ fun CakeCard(story: Story) {
     }
 }
 
+/** Save (and optionally share) the greeting image, asking for storage permission on Android 9 and below. */
 @Composable
-fun SaveGreetingButton(story: Story) {
+fun rememberKeepsakeSaver(story: Story): (share: Boolean) -> Unit {
     val context = LocalContext.current
-    fun save() {
-        val ok = saveGreeting(context, drawGreeting(story.eggsFound.size))
-        Toast.makeText(context, if (ok) "Saved to Pictures/ETERNELLE ✦" else "Couldn't save the image, sorry!", Toast.LENGTH_LONG).show()
-        if (ok) story.sfx(Sfx.SPARKLE)
+    var pendingShare by remember { mutableStateOf(false) }
+    fun run(share: Boolean) {
+        val uri = saveGreeting(context, drawGreeting(story.eggsFound.size))
+        if (uri == null) {
+            Toast.makeText(context, "Couldn't save the image, sorry!", Toast.LENGTH_LONG).show()
+            return
+        }
+        story.sfx(Sfx.SPARKLE)
+        if (share) shareGreeting(context, uri)
+        else Toast.makeText(context, "Saved to your gallery (Pictures/ETERNELLE) ✦", Toast.LENGTH_LONG).show()
     }
     val storagePermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
-        if (ok) save() else Toast.makeText(context, "Storage permission is needed to save on this Android version.", Toast.LENGTH_LONG).show()
+        if (ok) run(pendingShare)
+        else Toast.makeText(context, "Storage permission is needed to save on this Android version.", Toast.LENGTH_LONG).show()
     }
-    PillButton("Save birthday greeting 🖼", primary = true) {
+    return { share ->
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-        ) storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) else save()
+        ) { pendingShare = share; storagePermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE) } else run(share)
+    }
+}
+
+@Composable
+fun SaveGreetingButton(story: Story) {
+    val save = rememberKeepsakeSaver(story)
+    PillButton("Save birthday greeting 🖼", primary = true) { save(false) }
+}
+
+/** The keepsake: her greeting card, the blessings she unlocked, and save/share. */
+@Composable
+fun KeepsakePage(story: Story) {
+    val save = rememberKeepsakeSaver(story)
+    val card = remember(story.eggsFound.size) { drawGreeting(story.eggsFound.size).asImageBitmap() }
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Midnight.copy(alpha = 0.55f), Midnight.copy(alpha = 0.92f))))) {
+        Column(
+            Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("YOUR KEEPSAKE", color = Gold, fontSize = 11.sp, letterSpacing = 2.4.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text("To keep, forever", color = Pearl, fontSize = 24.sp, fontFamily = Serif, fontStyle = FontStyle.Italic,
+                modifier = Modifier.semantics { heading() })
+            Spacer(Modifier.height(14.dp))
+            Image(
+                bitmap = card,
+                contentDescription = "Birthday greeting card: Happy Birthday Shiba Sis, a golden heart constellation, Lumi, " +
+                    "and the words Distance can change the address, never the bond. Your veer is always with you.",
+                modifier = Modifier.fillMaxWidth(0.82f).aspectRatio(1080f / 1350f).clip(RoundedCornerShape(18.dp))
+                    .border(1.dp, Gold.copy(alpha = 0.5f), RoundedCornerShape(18.dp)),
+            )
+            Spacer(Modifier.height(14.dp))
+            Buttons {
+                PillButton("Save to gallery 🖼", primary = true) { save(false) }
+                PillButton("Share 💌", primary = false) { save(true) }
+            }
+            Spacer(Modifier.height(18.dp))
+            Surface(color = Midnight.copy(alpha = 0.8f), shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth().border(1.dp, Gold.copy(alpha = 0.25f), RoundedCornerShape(20.dp))) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Seven blessings for your year", color = Gold, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                    Blessings.forEach { b ->
+                        Row(Modifier.padding(vertical = 5.dp)) {
+                            Text("✦", color = Gold, fontSize = 14.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(b.title, color = Rose, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                                Text(b.line, color = Pearl.copy(alpha = 0.8f), fontSize = 12.sp, lineHeight = 17.sp)
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text("Secrets found: ${story.eggsFound.size} of 4" +
+                        if (story.eggsFound.size < 4) " — Lumi says there are more to discover!" else " — you found them all!",
+                        color = Lavender, fontSize = 12.sp)
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            Buttons {
+                PillButton("Back to my universe", primary = false) { story.keepsakeMode = false }
+                PillButton("Replay ✦", primary = false) { story.replay() }
+            }
+            Spacer(Modifier.height(10.dp))
+            Text("4 December 2026 · Jamshedpur ♥ Kolkata", color = Lavender.copy(alpha = 0.8f), fontSize = 11.sp)
+        }
     }
 }
 
@@ -601,7 +675,7 @@ fun FinalCard(story: Story) {
         Text("Secrets found: ${story.eggsFound.size} of 4", color = Lavender, fontSize = 11.sp)
         Buttons {
             SaveGreetingButton(story)
-            PillButton("Keepsake mode", primary = false) { story.keepsakeMode = true }
+            PillButton("My keepsake 💝", primary = false) { story.keepsakeMode = true }
             PillButton("Replay ✦", primary = false) { story.replay() }
         }
     }

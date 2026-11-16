@@ -101,8 +101,8 @@ fun drawGreeting(eggs: Int): Bitmap {
     return bmp
 }
 
-/** Saves to Pictures/ETERNELLE. Returns true on success. Nothing is uploaded anywhere. */
-fun saveGreeting(context: Context, bmp: Bitmap): Boolean = try {
+/** Saves to Pictures/ETERNELLE and returns its content Uri. Nothing is uploaded anywhere. */
+fun saveGreeting(context: Context, bmp: Bitmap): android.net.Uri? = try {
     val name = "ETERNELLE_Birthday_${System.currentTimeMillis()}.png"
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         val values = ContentValues().apply {
@@ -111,13 +111,23 @@ fun saveGreeting(context: Context, bmp: Bitmap): Boolean = try {
             put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/ETERNELLE")
         }
         val uri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        uri != null && (context.contentResolver.openOutputStream(uri)?.use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) } ?: false)
+        if (uri != null && context.contentResolver.openOutputStream(uri)?.use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) } == true) uri else null
     } else {
         @Suppress("DEPRECATION")
-        val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "ETERNELLE")
-        dir.mkdirs()
-        FileOutputStream(File(dir, name)).use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        MediaStore.Images.Media.insertImage(context.contentResolver, bmp, name, "ETERNELLE birthday greeting")
+            ?.let { android.net.Uri.parse(it) }
     }
 } catch (_: Exception) {
-    false
+    null
+}
+
+/** Opens the share sheet (WhatsApp, etc.) for a saved greeting. */
+fun shareGreeting(context: Context, uri: android.net.Uri) {
+    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+        type = "image/png"
+        putExtra(android.content.Intent.EXTRA_STREAM, uri)
+        putExtra(android.content.Intent.EXTRA_TEXT, "A little universe. A lifetime of love. ✦")
+        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    context.startActivity(android.content.Intent.createChooser(send, "Share your birthday keepsake"))
 }
