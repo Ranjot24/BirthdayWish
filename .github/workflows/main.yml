@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Unzip project
-        run: unzip -o ETERNELLE_Native_AR_AllDevices.zip -d src
+        run: unzip -o ETERNELLE*.zip -d src
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
