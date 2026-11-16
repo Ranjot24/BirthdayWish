@@ -45,6 +45,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -483,6 +484,9 @@ fun ChapterCard(story: Story, audio: AudioDirector, arMode: Boolean, onUse3D: ()
                 delay(1800)
                 story.voicePlaying = true
                 audio.playVoice { story.voicePlaying = false }
+            }
+            DisposableEffect(Unit) {
+                onDispose { audio.stopVoice(); story.voicePlaying = false }
             }
             CardTitle("CHAPTER 6 · THE INVISIBLE HUG", if (story.ribbonWrapped) "" else "Listen…")
             if (story.ribbonWrapped) {
