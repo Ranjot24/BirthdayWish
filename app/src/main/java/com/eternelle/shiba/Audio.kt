@@ -91,7 +91,7 @@ class AudioDirector(private val context: Context) {
     }
 
     fun startMusic() {
-        if (!musicOn || !foreground || filmPlaying) return
+        if (!musicOn || !foreground) return
         if (music == null) {
             music = MediaPlayer.create(context, R.raw.music_universe)?.apply {
                 isLooping = true
@@ -140,10 +140,6 @@ class AudioDirector(private val context: Context) {
         voice = null
         setMusicVolume(0.32f)
     }
-
-    private var filmPlaying = false
-    fun pauseForFilm() { filmPlaying = true; stopVoice(); music?.pause() }
-    fun resumeAfterFilm() { filmPlaying = false; startMusic() }
 
     fun onForeground() { foreground = true; startMusic() }
 

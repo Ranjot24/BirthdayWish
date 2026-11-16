@@ -131,7 +131,6 @@ class Story(context: Context) {
     var voicePlaying by mutableStateOf(false)
     // Final
     var keepsakeMode by mutableStateOf(false)
-    var filmOpen by mutableStateOf(false)
     var eggsFound by mutableStateOf(setOf<String>())
     var shootingStarKey by mutableIntStateOf(0)
     var finalHeartTaps = 0

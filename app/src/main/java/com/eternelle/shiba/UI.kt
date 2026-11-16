@@ -150,7 +150,6 @@ fun EternelleApp(audio: AudioDirector, crashReport: String? = null) {
                     })
                 }
             }
-            if (story.filmOpen) FilmPlayer(audio) { story.filmOpen = false }
             crash?.let { report -> CrashDialog(report) { crash = null } }
         }
     }
@@ -196,8 +195,6 @@ fun InvitationScreen(story: Story, onBegin: () -> Unit) {
             }
             Spacer(Modifier.height(30.dp))
             PillButton("Begin My Universe ✦", primary = true, onClick = onBegin)
-            Spacer(Modifier.height(10.dp))
-            PillButton("Watch the film first 🎬", primary = false) { story.filmOpen = true }
             Spacer(Modifier.height(18.dp))
             Text("4 DECEMBER 2026  ·  FROM JAMSHEDPUR, WITH LOVE", color = Lavender, fontSize = 10.sp, letterSpacing = 1.4.sp,
                 textAlign = TextAlign.Center)
@@ -627,12 +624,6 @@ fun KeepsakePage(story: Story) {
             Buttons {
                 PillButton("Save to gallery 🖼", primary = true) { save(false) }
                 PillButton("Share 💌", primary = false) { save(true) }
-            }
-            Spacer(Modifier.height(6.dp))
-            val ctx = LocalContext.current
-            Buttons {
-                PillButton("Watch the film 🎬", primary = false) { story.filmOpen = true }
-                PillButton("Share the film 🎞", primary = false) { shareFilm(ctx) }
             }
             Spacer(Modifier.height(18.dp))
             Surface(color = Midnight.copy(alpha = 0.8f), shape = RoundedCornerShape(20.dp),
