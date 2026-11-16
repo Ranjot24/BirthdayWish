@@ -3,6 +3,8 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -24,3 +26,13 @@ jobs:
         with:
           name: ETERNELLE-APK
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish permanent download (GitHub Release)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk ETERNELLE.apk
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest ETERNELLE.apk \
+            --title "ETERNELLE — latest build" \
+            --notes "Install ETERNELLE.apk on Android 7+. Built from commit ${GITHUB_SHA::7}." \
+            --target "$GITHUB_SHA"
