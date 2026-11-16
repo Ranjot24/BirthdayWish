@@ -153,6 +153,8 @@ class Story(context: Context) {
 
     fun goTo(c: Chapter) {
         chapter = c
+        CrashReporter.lastChapter = c.title
+        prefs.edit().putString("lastChapter", c.title).apply()
         if (c.ordinal > furthest) {
             furthest = c.ordinal
             prefs.edit().putInt("furthest", furthest).apply()

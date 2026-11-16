@@ -10,13 +10,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CrashReporter.install(this)
+        val crash = CrashReporter.consume(this)
         @Suppress("DEPRECATION")
         window.statusBarColor = android.graphics.Color.rgb(23, 17, 42)
         @Suppress("DEPRECATION")
         window.navigationBarColor = android.graphics.Color.rgb(23, 17, 42)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         audio = AudioDirector(applicationContext)
-        setContent { EternelleApp(audio) }
+        setContent { EternelleApp(audio, crash) }
     }
 
     override fun onResume() {

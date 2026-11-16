@@ -79,8 +79,9 @@ import kotlinx.coroutines.delay
 private val Serif = FontFamily.Serif
 
 @Composable
-fun EternelleApp(audio: AudioDirector) {
+fun EternelleApp(audio: AudioDirector, crashReport: String? = null) {
     val context = LocalContext.current
+    var crash by remember { mutableStateOf(crashReport) }
     val story = remember { Story(context.applicationContext) }
     SideEffect { story.sfx = { audio.play(it) } }
     LaunchedEffect(story.soundOn, story.musicOn, story.reduceMotion) {
@@ -146,6 +147,7 @@ fun EternelleApp(audio: AudioDirector) {
                     })
                 }
             }
+            crash?.let { report -> CrashDialog(report) { crash = null } }
         }
     }
 }
@@ -456,6 +458,8 @@ fun ChapterCard(story: Story, audio: AudioDirector, arMode: Boolean, onUse3D: ()
                 Text("Distance can change the address.\nNever the bond.", color = Rose, fontSize = 21.sp, lineHeight = 29.sp,
                     fontFamily = Serif, fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
             } else Body("Watch the ribbon travel from Jamshedpur to Kolkata…")
+            Spacer(Modifier.height(4.dp))
+            Text("◀ Jamshedpur        Kolkata ▶", color = Gold, fontSize = 12.sp, letterSpacing = 1.sp)
             Buttons {
                 PillButton("Jamshedpur 🔔", primary = false) { story.sfx(Sfx.BELL_LEFT); story.say(Lines.jamshedpur); story.lumi.feel(Mood.Happy) }
                 PillButton("Kolkata 🔔", primary = false) { story.sfx(Sfx.BELL_RIGHT); story.say(Lines.kolkata); story.lumi.feel(Mood.Happy) }
@@ -617,3 +621,31 @@ Whatever happens, wherever you are, remember this: tera veer hamesha tere naal h
 
 With all my love,
 Your veer"""
+
+@Composable
+fun CrashDialog(report: String, onClose: () -> Unit) {
+    val context = LocalContext.current
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)).safeDrawingPadding().padding(20.dp),
+        contentAlignment = Alignment.Center) {
+        Surface(color = Midnight, shape = RoundedCornerShape(20.dp), modifier = Modifier.border(1.dp, Gold.copy(alpha = 0.4f), RoundedCornerShape(20.dp))) {
+            Column(Modifier.padding(18.dp)) {
+                Text("Sorry — ETERNELLE closed last time", color = Gold, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                Text("Tap Copy and send this to Claude so it can be fixed.", color = Pearl, fontSize = 13.sp)
+                Spacer(Modifier.height(10.dp))
+                Box(Modifier.fillMaxWidth().heightIn(max = 260.dp).clip(RoundedCornerShape(12.dp)).background(Color.Black.copy(alpha = 0.4f))) {
+                    Text(report, color = Pearl.copy(alpha = 0.8f), fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.verticalScroll(rememberScrollState()).padding(10.dp))
+                }
+                Buttons {
+                    PillButton("Copy", primary = true) {
+                        val cm = context.getSystemService(android.content.ClipboardManager::class.java)
+                        cm?.setPrimaryClip(android.content.ClipData.newPlainText("ETERNELLE crash", report))
+                        Toast.makeText(context, "Copied — paste it to Claude", Toast.LENGTH_SHORT).show()
+                    }
+                    PillButton("Close", primary = false, onClick = onClose)
+                }
+            }
+        }
+    }
+}

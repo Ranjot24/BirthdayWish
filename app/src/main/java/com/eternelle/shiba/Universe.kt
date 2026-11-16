@@ -380,8 +380,10 @@ fun SceneScope.FloatingIsland(p: Palette, x: Float, onTap: () -> Unit, label: St
             scale = Scale(1f + 0.4f * sin(t * 3f))
         })
         content(this)
-        TextNode(text = label, fontSize = 64f, textColor = 0xFFFFE6AE.toInt(), backgroundColor = 0x993A1A45.toInt(),
-            widthMeters = 0.14f, heightMeters = 0.035f, position = Position(0f, 0.16f, 0.02f))
+        // small golden beacon above each city (3D text labels removed for stability)
+        Ball(0.006f, p.goldGlow, Position(0f, 0.15f, 0f), segments = 8, onTap = onTap, motion = { t, _ ->
+            scale = Scale(1f + 0.3f * sin(t * 2.5f))
+        })
     }
 }
 
