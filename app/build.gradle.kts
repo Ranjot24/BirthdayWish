@@ -12,8 +12,21 @@ android {
         applicationId = "com.eternelle.shiba"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "2.0"
+        versionCode = 3
+        versionName = "2.1"
+    }
+
+    // One fixed key so every build installs as an update over the previous one.
+    signingConfigs {
+        create("eternelle") {
+            storeFile = file("eternelle.keystore")
+            storePassword = "eternelle2026"
+            keyAlias = "eternelle"
+            keyPassword = "eternelle2026"
+        }
+    }
+    buildTypes {
+        getByName("debug") { signingConfig = signingConfigs.getByName("eternelle") }
     }
 
     compileOptions {
