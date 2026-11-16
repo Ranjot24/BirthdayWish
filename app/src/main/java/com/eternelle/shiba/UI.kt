@@ -497,7 +497,7 @@ fun ChapterCard(story: Story, audio: AudioDirector, arMode: Boolean, onUse3D: ()
                 Text("Your veer is always with you.", color = Rose, fontSize = 23.sp, fontFamily = Serif,
                     fontStyle = FontStyle.Italic, textAlign = TextAlign.Center)
             } else Body("A golden ribbon is wrapping a hug around your heart.")
-            var showWords by remember { mutableStateOf(!audio.punjabiVoice) }
+            var showWords by remember { mutableStateOf(!audio.punjabiVoice && !audio.hasRecordedVoice) }
             if (showWords) {
                 Spacer(Modifier.height(8.dp))
                 Box(Modifier.fillMaxWidth().heightIn(max = 150.dp).clip(RoundedCornerShape(14.dp))
@@ -508,7 +508,7 @@ fun ChapterCard(story: Story, audio: AudioDirector, arMode: Boolean, onUse3D: ()
                         Text(Lines.veerEnglish, color = Pearl.copy(alpha = 0.7f), fontSize = 12.sp, lineHeight = 17.sp)
                     }
                 }
-                if (!audio.punjabiVoice) Body("(This phone has no Punjabi voice installed, so here are the words.)")
+                if (!audio.punjabiVoice && !audio.hasRecordedVoice) Body("(This phone has no Punjabi voice installed, so here are the words.)")
             }
             Buttons {
                 if (story.voicePlaying) PillButton("■ Pause message", primary = false) { audio.stopVoice(); story.voicePlaying = false }

@@ -12,8 +12,8 @@ android {
         applicationId = "com.eternelle.shiba"
         minSdk = 24
         targetSdk = 35
-        versionCode = 5
-        versionName = "2.3"
+        versionCode = 8
+        versionName = "2.6"
     }
 
     // One fixed key so every build installs as an update over the previous one.

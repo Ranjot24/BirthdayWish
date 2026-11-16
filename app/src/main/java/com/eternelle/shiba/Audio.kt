@@ -69,6 +69,9 @@ class AudioDirector(private val context: Context) {
     private var tts: TextToSpeech? = null
     @Volatile var punjabiVoice = false
         private set
+    /** True when a recorded voice message is bundled, so it plays on every phone. */
+    val hasRecordedVoice: Boolean
+        get() = context.resources.getIdentifier("veer_voice", "raw", context.packageName) != 0
 
     init {
         tts = TextToSpeech(context) { status ->
@@ -109,6 +112,16 @@ class AudioDirector(private val context: Context) {
     fun playVoice(onDone: () -> Unit) {
         stopVoice()
         setMusicVolume(0.06f) // never overpower the voice
+        // 1) A recorded voice file bundled in the app (res/raw/veer_voice.*) works on every phone.
+        val recorded = context.resources.getIdentifier("veer_voice", "raw", context.packageName)
+        if (recorded != 0) {
+            voice = MediaPlayer.create(context, recorded)?.apply {
+                setOnCompletionListener { setMusicVolume(0.32f); onDone() }
+                start()
+            }
+            if (voice != null) return
+        }
+        // 2) Otherwise the phone's own Punjabi text-to-speech voice, if installed.
         val engine = tts
         if (punjabiVoice && engine != null) {
             engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
